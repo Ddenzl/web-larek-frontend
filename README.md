@@ -191,3 +191,4 @@ __3. Слой управления `(App, EventEmitter, BasketManager):`__
 - `AppState` обновляет данные и уведомляет об изменениях.
 - UI-компоненты реагируют на события и обновляют DOM.
 
+[link](https://github.com/Ddenzl/web-larek-frontend.git)
