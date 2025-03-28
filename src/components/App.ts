@@ -66,8 +66,6 @@ export class App {
 
         // Отображение превью товара при выборе карточки
         this.events.on(EVENT_TYPES.CARD_SELECT, (item: IProduct) => {
-            console.log(item);
-            
             this.page.saveScrollPosition();
             this.appData.setPreview(item);
             const card = new Card('card', cloneTemplate(TEMPLATES.CARD_PREVIEW_TEMPLATE), {
@@ -79,8 +77,6 @@ export class App {
                 card.setDisabled(card.button, true);
                 card.buttonText = 'Нельзя купить';
             }
-            console.log(card);
-            
             this.renderModal(card);
             console.log(card.image);
             
