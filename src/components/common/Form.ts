@@ -4,7 +4,7 @@ import { IEvents } from "../base/events";
 
 interface IFormState {
     valid: boolean;
-    errors: string[];
+    errors: string | string[];
 }
 
 export class Form<T> extends Component<IFormState> {
@@ -47,7 +47,7 @@ export class Form<T> extends Component<IFormState> {
 
     render(state?: Partial<T> & IFormState): HTMLElement {
         const {valid, errors, ...inputs} = state;
-        super.render({ valid, errors });
+        super.render({ valid: valid ?? false, errors: errors ?? '' });
         Object.assign(this, inputs);
         return this.container
     }

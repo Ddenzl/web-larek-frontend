@@ -1,7 +1,7 @@
 import { EventEmitter } from "./base/events";
 import { IProduct, OrderForm } from "../types";
-import { TEMPLATES, EVENT_TYPES } from "../utils/constants";
-import { ensureElement, cloneTemplate } from "../utils/utils";
+import { TEMPLATES, EVENT_TYPES, ERROR_MESSAGES } from "../utils/constants";
+import { cloneTemplate } from "../utils/utils";
 import { ProductsApi } from "./api/ProductsApi";
 import { AppState } from "./AppData";
 import { Basket } from "./Basket";
@@ -22,18 +22,26 @@ export class App {
     private success: Success;
     private basketManager: BasketManager;
 
-    constructor(private events: EventEmitter, private api: ProductsApi, private appData: AppState) {
+    constructor(
+        private events: EventEmitter,
+        private api: ProductsApi,
+        private appData: AppState,
+        page: Page,
+        modal: Modal,
+        basket: Basket,
+        order: Order,
+        contacts: Contacts,
+        success: Success,
+        basketManager: BasketManager
+    ) {
+        this.page = page;
+        this.modal = modal;
+        this.basket = basket;
+        this.order = order;
+        this.contacts = contacts;
+        this.success = success;
+        this.basketManager = basketManager;
 
-        // -----------------------Инициализация основных компонентов приложения--------------------------------------
-        this.page = new Page(document.body, events);
-        this.modal = new Modal(ensureElement('#modal-container'), events);
-        this.basket = new Basket('basket', cloneTemplate(TEMPLATES.BASKET_TEMPLATE), events);
-        this.order = new Order(cloneTemplate(TEMPLATES.ORDER_TEMPLATE), events);
-        this.contacts = new Contacts(cloneTemplate(TEMPLATES.CONTACTS_TEMPLATE), events);
-        this.success = new Success(cloneTemplate(TEMPLATES.SUCCESS_TEMPLATE), {
-            onClick: () => this.modal.close(),
-        });
-        this.basketManager = new BasketManager(this.basket, events);
     }
 
     // Метод инициализации приложения
@@ -58,17 +66,24 @@ export class App {
 
         // Отображение превью товара при выборе карточки
         this.events.on(EVENT_TYPES.CARD_SELECT, (item: IProduct) => {
+            console.log(item);
+            
             this.page.saveScrollPosition();
             this.appData.setPreview(item);
             const card = new Card('card', cloneTemplate(TEMPLATES.CARD_PREVIEW_TEMPLATE), {
                 onClick: () => this.events.emit(EVENT_TYPES.CARD_ADD, item),
             });
             const isInBasket = this.appData.basket.some((basketItem) => basketItem.id === item.id);
+            card.render(item);
             if (isInBasket) {
                 card.setDisabled(card.button, true);
                 card.buttonText = 'Нельзя купить';
             }
+            console.log(card);
+            
             this.renderModal(card);
+            console.log(card.image);
+            
         });
 
         // Добавление товара в корзину
@@ -94,12 +109,13 @@ export class App {
         // Открывтие формы заказа
         this.events.on(EVENT_TYPES.ORDER_OPEN, () => {
             this.appData.clearOrder(); 
-            this.order.resetForm();  
+            this.order.resetForm();
+            this.appData.validateOrder(); 
             this.renderModal(this.order, {
                 address: this.appData.order.address,
                 payment: this.appData.order.payment,
-                valid: !this.appData.formErrors.address && !this.appData.formErrors.payment,
-                errors: [],
+                valid: this.appData.validateOrder(),
+                errors: Object.values(this.appData.formErrors).join('; '),
             });
         });
 
@@ -109,11 +125,12 @@ export class App {
             this.appData.order.total = this.appData.getTotalPrice();
             this.appData.selected();
             this.contacts.clear();
+            this.appData.validateContact();
             this.renderModal(this.contacts, {
                 email: this.appData.order.email,
                 phone: this.appData.order.phone,
-                valid: !this.appData.formErrors.email && !this.appData.formErrors.phone,
-                errors: [],
+                valid: this.appData.validateContact(),
+                errors: Object.values(this.appData.formErrors).join('; '),
             });
         });
 
@@ -168,9 +185,11 @@ export class App {
             this.contacts.resetForm();
             this.events.emit(EVENT_TYPES.BASKET_CHANGE);
         } catch (error) {
-            this.contacts.errors = 'Ошибка при оформлении заказа';
+            this.contacts.errors = ERROR_MESSAGES.ORDER_SUBMIT_FAILED;
             console.error('Ошибка оформления:', error);
         }
+
+        this.events.on(EVENT_TYPES.SUCCESS_CLOSE, () => this.modal.close());
     }
 
     // Универсальный метод для рендеринга модального окна

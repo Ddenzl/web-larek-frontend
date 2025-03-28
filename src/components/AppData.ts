@@ -1,5 +1,5 @@
-import { FormError, IAppState, IProduct, IUserData, OrderForm } from "../types";
-import { EVENT_TYPES } from "../utils/constants";
+import { FormError, IAppState, IProduct, IOrder, OrderForm } from "../types";
+import { ERROR_MESSAGES, EVENT_TYPES } from "../utils/constants";
 import { IEvents } from "./base/events";
 import { Model } from "./base/Model";
 
@@ -7,16 +7,16 @@ export class AppState extends Model<IAppState> {
     catalog: IProduct[] = [];
     basket: IProduct[] = [];
     preview: IProduct['id'] | null = null;
-    order: IUserData  =  {
-		email: '',
-		phone: '',
-		address: '',
-		payment: '',
-		total: 0,
-		items: [],
-	};
+    order: IOrder = {
+        email: '',
+        phone: '',
+        address: '',
+        payment: '',
+        total: 0,
+        items: [],
+    };
     formErrors: FormError = {};
-    
+
     constructor(data: Partial<IAppState>, events: IEvents) {
         super(data, events);
     }
@@ -41,9 +41,9 @@ export class AppState extends Model<IAppState> {
     }
 
     clearBasket() {
-		this.basket = [];
-		this.emitChanges(EVENT_TYPES.BASKET_CHANGE);
-	}
+        this.basket = [];
+        this.emitChanges(EVENT_TYPES.BASKET_CHANGE);
+    }
 
     clearOrder() {
         this.order = {
@@ -52,9 +52,11 @@ export class AppState extends Model<IAppState> {
             address: '',
             payment: '',
             total: 0,
-            items: [], 
+            items: [],
         };
         this.formErrors = {};
+        this.emitChanges(EVENT_TYPES.ORDER_ERRORS_CHANGE, this.formErrors);
+        this.emitChanges(EVENT_TYPES.CONTACTS_ERRORS_CHANGE, this.formErrors);
     }
 
     clearAll() {
@@ -62,7 +64,7 @@ export class AppState extends Model<IAppState> {
         this.clearOrder();
     }
 
-    getTotalPrice(): IUserData['total'] {
+    getTotalPrice(): IOrder['total'] {
         return this.basket.reduce((total, item) => total + (item.price || 0), 0);
     }
 
@@ -74,41 +76,41 @@ export class AppState extends Model<IAppState> {
         this.order.items = this.basket.map((items) => items.id);
     }
 
-    prepareOrder(): IUserData {
+    prepareOrder(): IOrder {
         this.selected();
         this.order.total = this.getTotalPrice();
         return this.order;
     }
 
-    validateOrder() {    
+    validateOrder() {
         const errors: typeof this.formErrors = {};
-    
+
         if (!this.order.address) {
-            errors.address = 'Необходимо указать адрес';
+            errors.address = ERROR_MESSAGES.ADDRESS_REQUIRED;
         }
         if (!this.order.payment) {
-            errors.payment = 'Необходимо выбрать способ оплаты';
+            errors.payment = ERROR_MESSAGES.PAYMENT_REQUIRED;
         }
-    
+
         this.formErrors = errors;
         this.emitChanges(EVENT_TYPES.ORDER_ERRORS_CHANGE, this.formErrors);
-    
+
         return Object.keys(errors).length === 0;
     }
 
     validateContact() {
         const errors: typeof this.formErrors = {};
-    
+
         if (!this.order.email) {
-            errors.email = 'Необходимо указать email';
+            errors.email = ERROR_MESSAGES.EMAIL_REQUIRED;
         }
         if (!this.order.phone) {
-            errors.phone = 'Необходимо указать телефон';
+            errors.phone = ERROR_MESSAGES.PHONE_REQUIRED;
         }
-    
+
         this.formErrors = errors;
         this.emitChanges(EVENT_TYPES.CONTACTS_ERRORS_CHANGE, this.formErrors);
-    
+
         return Object.keys(errors).length === 0;
     }
 

@@ -12,7 +12,7 @@ export const TEMPLATES = {
     ORDER_TEMPLATE: ensureElement<HTMLTemplateElement>('#order'),
     CONTACTS_TEMPLATE: ensureElement<HTMLTemplateElement>('#contacts'),
     SUCCESS_TEMPLATE: ensureElement<HTMLTemplateElement>('#success'),
-}
+} as const;
 
 export const EVENT_TYPES = {
     CATALOG_CHANGE: 'catalog:change',
@@ -28,5 +28,22 @@ export const EVENT_TYPES = {
     CONTACTS_ERRORS_CHANGE: 'contactsErrors:change',
     MODAL_OPEN: 'modal:open',
     MODAL_CLOSE: 'modal:close',
+    SUCCESS_CLOSE: 'success:close',
     FORM_INPUT_CHANGE: /^(order|contacts)\..*:change/,
-}
+} as const;
+
+export const ERROR_MESSAGES = {
+    ORDER_SUBMIT_FAILED: 'Ошибка при оформлении заказа',
+    ADDRESS_REQUIRED: 'Необходимо указать адрес',
+    PAYMENT_REQUIRED: 'Необходимо выбрать способ оплаты',
+    EMAIL_REQUIRED: 'Необходимо указать email',
+    PHONE_REQUIRED: 'Необходимо указать телефон',
+} as const;
+
+export const CATEGORY_COLOR_MAP: Record<string, string> = {
+    'софт-скил': 'soft',
+    'хард-скил': 'hard',
+    'дополнительное': 'additional',
+    'кнопка': 'button',
+    'другое': 'other',
+} as const;

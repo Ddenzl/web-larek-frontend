@@ -1,5 +1,5 @@
 import { IProduct } from "../types";
-import { CDN_URL } from "../utils/constants";
+import { CATEGORY_COLOR_MAP } from "../utils/constants";
 import { ensureElement } from "../utils/utils";
 import { Component } from "./base/Component";
 
@@ -23,13 +23,6 @@ export class Card extends Component<ICard> {
     protected _category: HTMLElement;
     protected _price: HTMLElement;
     button: HTMLButtonElement;
-    protected _colorMap: Record<string, string> = {
-        'софт-скил': 'soft',
-        'хард-скил': 'hard',
-        'дополнительное': 'additional',
-        'кнопка': 'button',
-        'другое': 'other'
-    };
 
     constructor(protected blockName: string, container: HTMLElement, actions?: ICardActions) {
         super(container);
@@ -71,16 +64,23 @@ export class Card extends Component<ICard> {
     }
 
     set image(value: IProduct['image']) {
-        this.setImage(this._image, CDN_URL + value, this.title);
+        this.setImage(this._image, value, this.title);
     }
 
     set price(value: IProduct['price']) {
         this.setText(this._price, value ? `${value} синапсов` : `Бесценно`);
+        if (this.button) {
+            if (value === null) {
+                this.setDisabled(this.button, true);
+            } else {
+                this.setDisabled(this.button, false);
+            }
+        }
     }
 
     set category(value: IProduct['category']) {
         this.setText(this._category, value);
-        const colorClass = this._colorMap[value.toLowerCase()] || 'default';
+        const colorClass = CATEGORY_COLOR_MAP[value.toLowerCase()] || 'default';
         this._category.className = `card__category card__category_${colorClass}`;
     }
 
@@ -89,7 +89,9 @@ export class Card extends Component<ICard> {
     }
 
     set buttonText(value: string) {
-        this.setText(this.button, value);
+        if (this.button) {
+            this.setText(this.button, value);
+        }
     }
 
     setDisabled(element: HTMLElement, state: boolean): void {
